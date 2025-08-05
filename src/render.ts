@@ -14,7 +14,7 @@ function createToggleIcon(): HTMLElement {
 export function renderNode(node: BulletNode): HTMLDivElement {
     const container = document.createElement("div");
     container.className = "node";
-    container.id = node.id;
+    container.id = "bullet-" + node.id;
     const header = document.createElement("div");
     header.className = "node-header";
 

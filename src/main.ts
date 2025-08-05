@@ -1,24 +1,46 @@
-import { open } from '@tauri-apps/plugin-dialog';
-import { readTextFileLines } from '@tauri-apps/plugin-fs';
-import { SilverNode, SilverTree } from "./tree";
+import { open, save } from '@tauri-apps/plugin-dialog';
+import { readTextFileLines, writeTextFile } from '@tauri-apps/plugin-fs';
+import { BulletNode, SilverNode, SilverTree } from "./tree";
 import { renderTree } from "./render"
 
 const tree = new SilverTree();
 
 const openSaveFileBlock = document.querySelector("#open-save-file-block") as HTMLDivElement;
 
-function showTree() {
+function showApp() {
     const treeElement = renderTree(tree);
     const app = document.querySelector("#app") as HTMLDivElement;
+
+    const header = document.createElement("div");
+    header.className = "app-header";
+
+    const saveButton = document.createElement("button");
+    saveButton.textContent = "Сохранить"
+    saveButton.addEventListener("click", async () => {
+        const filepath = localStorage.getItem("filepath");
+        if (filepath) {
+            saveToFile(filepath);
+        } else {
+            const path = await save({
+                filters: [{ name: 'Silver Filter', extensions: ['silver']}],
+            });
+            if (path) {
+                localStorage.setItem("filepath", path);
+                saveToFile(path);
+            }
+        }
+    });
+    header.appendChild(saveButton);
+
+    app.appendChild(header);
     app.appendChild(treeElement);
     app.style.display = "block";
 }
 
 // level | id | type | meta | content
-async function parseSilverFile(filePath: string | null) {
-    if (!filePath) return;
+async function parseSilverFile(filepath: string) {
     const lastNode: SilverNode[] = [tree.root];
-    const lines = await readTextFileLines(filePath);
+    const lines = await readTextFileLines(filepath);
     for await (const line of lines) {
         const parts = line.split('|');
         if (parts.length < 5) {
@@ -39,6 +61,32 @@ async function parseSilverFile(filePath: string | null) {
     }
 }
 
+function serializeTree(): string[] {
+    const lines: string[] = [];
+
+    function serializeNode(node: SilverNode, level: number = -1): void {
+        if (node instanceof BulletNode) {
+            const metaStr = node.meta ? JSON.stringify(node.meta) : '';
+            const line = `${level}|${node.id}|${node.type}|${metaStr}|${node.content}`;
+            lines.push(line);
+        }
+        if (node.children && node.children.length > 0) {
+            for (const child of node.children) {
+                serializeNode(child, level + 1);
+            }
+        }
+    }
+
+    serializeNode(tree.root);
+    return lines;
+}
+
+async function saveToFile(filepath: string): Promise<void> {
+    const lines = serializeTree();
+    const content = lines.join('\n');
+    writeTextFile(filepath, content);
+}
+
 function showOpenSaveBlock() {
     const selectFileBtn = openSaveFileBlock.querySelector("#select-file-btn") as HTMLButtonElement;
     const createFileBtn = openSaveFileBlock.querySelector("#create-file-btn") as HTMLButtonElement;
@@ -48,13 +96,17 @@ function showOpenSaveBlock() {
             multiple: false,
             directory: false,
         });
-        await parseSilverFile(filePath);
-        showTree();
-        openSaveFileBlock.style.display = "none";
+        if (filePath) {
+            localStorage.setItem("filepath", filePath);
+            await parseSilverFile(filePath);
+            showApp();
+            openSaveFileBlock.style.display = "none";
+        }
     });
     createFileBtn.addEventListener("click", async () => {
         tree.addNode("hello-0", "text", null, "Hello!", tree.root);
-        showTree();
+        showApp();
+        localStorage.removeItem("filepath");
         openSaveFileBlock.style.display = "none";
     });
 
@@ -62,8 +114,12 @@ function showOpenSaveBlock() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-    const filepath = localStorage.getItem("filepath");
-    if (!filepath && openSaveFileBlock) {
-        showOpenSaveBlock();
-    }
+    showOpenSaveBlock();
+    // const filepath = localStorage.getItem("filepath");
+    // if (!filepath) {
+    //     showOpenSaveBlock();
+    // } else {
+    //     parseSilverFile(filepath);
+    //     showApp();
+    // }
 });
