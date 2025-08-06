@@ -32,6 +32,19 @@ function showApp() {
     });
     header.appendChild(saveButton);
 
+    const saveAsButton = document.createElement("button");
+    saveAsButton.textContent = "Сохранить как";
+    saveAsButton.addEventListener("click", async () => {
+        const path = await save({
+            filters: [{ name: 'Silver Filter', extensions: ['silver']}],
+        });
+        if (path) {
+            localStorage.setItem("filepath", path);
+            saveToFile(path);
+        }
+    });
+    header.appendChild(saveAsButton);
+
     app.appendChild(header);
     app.appendChild(treeElement);
     app.style.display = "block";
