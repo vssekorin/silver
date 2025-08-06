@@ -18,14 +18,14 @@ export function renderNode(node: BulletNode): HTMLDivElement {
     const header = document.createElement("div");
     header.className = "node-header";
 
-    const contentSpan = document.createElement("div");
-    contentSpan.className = "node-content";
-    contentSpan.textContent = node.content;
-    header.appendChild(contentSpan);
+    const nodeContent = document.createElement("div");
+    nodeContent.className = "node-content";
+    nodeContent.textContent = node.content;
+    header.appendChild(nodeContent);
 
     if (node.children && node.children.length > 0) {
         const toggleIcon = createToggleIcon();
-        header.insertBefore(toggleIcon, contentSpan);
+        header.insertBefore(toggleIcon, nodeContent);
     }
 
     container.appendChild(header);

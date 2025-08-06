@@ -68,7 +68,7 @@ async function parseSilverFile(filepath: string) {
         const meta = parts[3].length > 0 ? JSON.parse(parts[3]) : null;
         const content = parts.slice(4).join('|');
 
-        let parent = lastNode[level];
+        let parent = lastNode[level - 1];
         const node = tree.addNode(id, type, meta, content, parent ?? tree.root);
         lastNode[level] = node;
     }
