@@ -21,6 +21,13 @@ export function renderNode(node: BulletNode): HTMLDivElement {
     const nodeContent = document.createElement("div");
     nodeContent.className = "node-content";
     nodeContent.textContent = node.content;
+    nodeContent.contentEditable = "true";
+    nodeContent.addEventListener("blur", () => {
+        const newContent = nodeContent.textContent || "";
+        if (newContent !== node.content) {
+            node.content = newContent;
+        }
+    });
     header.appendChild(nodeContent);
 
     if (node.children && node.children.length > 0) {
