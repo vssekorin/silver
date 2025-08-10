@@ -3,7 +3,7 @@ import { readTextFileLines, writeTextFile } from '@tauri-apps/plugin-fs';
 import { BulletNode, SilverNode, SilverTree } from "./tree";
 import { renderTree } from "./render"
 
-const tree = new SilverTree();
+export const tree = new SilverTree();
 
 const openSaveFileBlock = document.querySelector("#open-save-file-block") as HTMLDivElement;
 
