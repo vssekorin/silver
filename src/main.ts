@@ -3,6 +3,8 @@ import { readTextFileLines, writeTextFile } from '@tauri-apps/plugin-fs';
 import { BulletNode, SilverNode, SilverTree } from "./tree";
 import { renderTree } from "./render"
 
+// Рассмотреть возможность удалить дерево и оставить только Map<id, meta>.
+// Вместо дерева использовать структуру div.
 export const tree = new SilverTree();
 
 const openSaveFileBlock = document.querySelector("#open-save-file-block") as HTMLDivElement;
@@ -10,12 +12,23 @@ const openSaveFileBlock = document.querySelector("#open-save-file-block") as HTM
 function showApp() {
     const treeElement = renderTree(tree);
     const app = document.querySelector("#app") as HTMLDivElement;
+    app.innerHTML = "";
 
     const header = document.createElement("div");
     header.className = "app-header";
 
+    const newButton = document.createElement("button");
+    newButton.textContent = "Новый";
+    newButton.addEventListener("click", () => {
+        tree.clear();
+        tree.addNode("hello-0", "text", null, "Hello!", tree.root);
+        showApp();
+        localStorage.removeItem("filepath");
+    });
+    header.appendChild(newButton);
+
     const saveButton = document.createElement("button");
-    saveButton.textContent = "Сохранить"
+    saveButton.textContent = "Сохранить";
     saveButton.addEventListener("click", async () => {
         const filepath = localStorage.getItem("filepath");
         if (filepath) {

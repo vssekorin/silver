@@ -28,6 +28,14 @@ export abstract class SilverNode {
             this.addChild(child);
         }
     }
+
+    public addChildFirst(child: BulletNode) {
+        if (!this.children) {
+            this.children = [child];
+        } else {
+            this.children.unshift(child);
+        }
+    }
 }
 
 export class RootNode extends SilverNode {}
@@ -65,10 +73,34 @@ export class SilverTree {
         return node;
     }
 
+    public addNodeFirst(id: string, type: string, meta: any, content: string, parent: SilverNode): BulletNode {
+        let node = new BulletNode(id, type, meta, content, parent);
+        parent.addChildFirst(node);
+        this.nodes.set(id, node);
+        return node;
+    }
+
     public addNodeAfter(id: string, type: string, meta: any, content: string, parent: SilverNode, reference: BulletNode): BulletNode {
         let node = new BulletNode(id, type, meta, content, parent);
         parent.addChildAfter(node, reference);
         this.nodes.set(id, node);
         return node;
+    }
+
+    public indentBullet(node: BulletNode): void {
+        const nodeIndex = node.parent.children?.indexOf(node) ?? -1;
+        // console.log(nodeIndex);
+        if (nodeIndex >= 1) {
+            node.parent.children?.splice(nodeIndex, 1);
+            const newParent = node.parent.children!![nodeIndex - 1];
+            // console.log(newParent);
+            newParent.addChild(node);
+            node.parent = newParent;
+        }
+    }
+
+    public clear(): void {
+        this.root = new RootNode();
+        this.nodes = new Map();
     }
 }

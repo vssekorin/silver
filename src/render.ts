@@ -43,30 +43,62 @@ export function renderNode(node: BulletNode): HTMLDivElement {
             node.content = newContent;
         }
     });
-    nodeContent.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-            e.preventDefault();
+    nodeContent.addEventListener("keydown", (e: KeyboardEvent) => {
+        switch (e.key) {
+            case 'Enter': {
+                e.preventDefault();
 
-            const cursorPosition = window.getSelection()?.getRangeAt(0)?.startOffset || 0;
-            const currentText = nodeContent.textContent || "";
-            const textBeforeCursor = currentText.substring(0, cursorPosition);
-            const textAfterCursor = currentText.substring(cursorPosition);
+                const cursorPosition = window.getSelection()?.getRangeAt(0)?.startOffset || 0;
+                const currentText = nodeContent.textContent || "";
+                const textBeforeCursor = currentText.substring(0, cursorPosition);
+                const textAfterCursor = currentText.substring(cursorPosition);
 
-            nodeContent.textContent = textBeforeCursor;
-            node.content = textBeforeCursor;
+                nodeContent.textContent = textBeforeCursor;
+                node.content = textBeforeCursor;
 
-            const newBullet = tree.addNodeAfter(uuidv4(), "text", null, textAfterCursor, node.parent, node);
-            const newDiv = renderNode(newBullet);
-            if (node.parent instanceof BulletNode) {
-                ((document.querySelector("#" + node.parent.id) as HTMLDivElement).lastElementChild as HTMLElement).addAfter(newDiv, container);
-            } else {
-                (document.querySelector(".silver-tree") as HTMLDivElement).addAfter(newDiv, container);
+                let newDiv;
+                if (!node.children || node.children.length == 0) {
+                    const newBullet = tree.addNodeAfter(uuidv4(), "text", null, textAfterCursor, node.parent, node);
+                    newDiv = renderNode(newBullet);
+                    if (node.parent instanceof BulletNode) {
+                        (document.getElementById(node.parent.id)!!.lastElementChild as HTMLElement).addAfter(newDiv, container);
+                    } else {
+                        (document.querySelector(".silver-tree") as HTMLDivElement).addAfter(newDiv, container);
+                    }
+                } else {
+                    const newBullet = tree.addNodeFirst(uuidv4(), "text", null, textAfterCursor, node);
+                    newDiv = renderNode(newBullet);
+                    const childrenContainer = document.getElementById(node.id)?.lastElementChild!!;
+                    childrenContainer.insertBefore(newDiv, childrenContainer.firstChild);
+                }
+
+                const newContentDiv = newDiv.querySelector('.node-content') as HTMLDivElement;
+                if (newContentDiv) {
+                    newContentDiv.focus();
+                }
+                break;
             }
+            case 'Tab': {
+                e.preventDefault();
 
-            const newContentDiv = newDiv.querySelector('.node-content') as HTMLDivElement;
-            if (newContentDiv) {
-                newContentDiv.focus();
-            }
+                 if (e.shiftKey) {
+                     // TODO Shift+Tab Unindent
+                 } else {
+                    // TODO оптимизировать
+                    if (node.parent instanceof BulletNode && node.parent.parent instanceof BulletNode) {
+                        const grandParent = node.parent.parent;
+                        const grandParentId = grandParent.id;
+                        tree.indentBullet(node);
+                        const newGrandParendDiv = renderNode(grandParent);
+                        document.getElementById(grandParentId)?.replaceWith(newGrandParendDiv);
+                    } else {
+                        tree.indentBullet(node);
+                        const newTreeDiv = renderTree(tree);
+                        (document.getElementsByClassName("silver-tree")[0] as HTMLElement).replaceWith(newTreeDiv);
+                    }
+                 }
+                 break;
+             }
         }
     });
     header.appendChild(nodeContent);
