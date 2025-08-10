@@ -1,5 +1,5 @@
-import {v4 as uuidv4 } from "uuid";
-import { BulletNode, SilverTree } from "./tree";
+import { v7 as uuidv7 } from "uuid";
+import { BulletNode, SilverNode } from "./tree";
 import { tree } from "./main"
 
 declare global {
@@ -26,6 +26,13 @@ function createToggleIcon(): HTMLElement {
     return container;
 }
 
+function saveNodeContent(nodeDiv: HTMLDivElement, node: BulletNode): void {
+    const newContent = nodeDiv.textContent || "";
+    if (newContent !== node.content) {
+        node.content = newContent;
+    }
+}
+
 export function renderNode(node: BulletNode): HTMLDivElement {
     const container = document.createElement("div");
     container.className = "node";
@@ -38,10 +45,7 @@ export function renderNode(node: BulletNode): HTMLDivElement {
     nodeContent.textContent = node.content;
     nodeContent.contentEditable = "true";
     nodeContent.addEventListener("blur", async () => {
-        const newContent = nodeContent.textContent || "";
-        if (newContent !== node.content) {
-            node.content = newContent;
-        }
+        saveNodeContent(nodeContent, node);
     });
     nodeContent.addEventListener("keydown", (e: KeyboardEvent) => {
         // используется code вместо key из-за Tab и Shift+Tab
@@ -59,15 +63,15 @@ export function renderNode(node: BulletNode): HTMLDivElement {
 
                 let newDiv;
                 if (!node.children || node.children.length == 0) {
-                    const newBullet = tree.addNodeAfter(uuidv4(), "text", null, textAfterCursor, node.parent, node);
+                    const newBullet = tree.addNodeAfter(uuidv7(), "text", null, textAfterCursor, node.parent, node);
                     newDiv = renderNode(newBullet);
                     if (node.parent instanceof BulletNode) {
                         (document.getElementById(node.parent.id)!!.lastElementChild as HTMLElement).addAfter(newDiv, container);
                     } else {
-                        (document.querySelector(".silver-tree") as HTMLDivElement).addAfter(newDiv, container);
+                        document.getElementById("silver-tree")!!.addAfter(newDiv, container);
                     }
                 } else {
-                    const newBullet = tree.addNodeFirst(uuidv4(), "text", null, textAfterCursor, node);
+                    const newBullet = tree.addNodeFirst(uuidv7(), "text", null, textAfterCursor, node);
                     newDiv = renderNode(newBullet);
                     const childrenContainer = document.getElementById(node.id)?.lastElementChild!!;
                     childrenContainer.insertBefore(newDiv, childrenContainer.firstChild);
@@ -81,6 +85,7 @@ export function renderNode(node: BulletNode): HTMLDivElement {
             }
             case 'Tab': {
                 e.preventDefault();
+                saveNodeContent(nodeContent, node);
                 if (e.shiftKey) {
                     // TODO оптимизировать else
                     if (node.parent instanceof BulletNode && node.parent.parent instanceof BulletNode) {
@@ -91,8 +96,8 @@ export function renderNode(node: BulletNode): HTMLDivElement {
                         document.getElementById(grandParentId)?.replaceWith(newGrandParendDiv);
                     } else {
                         tree.unindentBullet(node);
-                        const newTreeDiv = renderTree(tree);
-                        (document.getElementsByClassName("silver-tree")[0] as HTMLElement).replaceWith(newTreeDiv);
+                        const newTreeDiv = renderTree(tree.root);
+                        document.getElementById("silver-tree")!!.replaceWith(newTreeDiv);
                     }
                 } else {
                     // TODO оптимизировать else
@@ -104,10 +109,11 @@ export function renderNode(node: BulletNode): HTMLDivElement {
                         document.getElementById(grandParentId)?.replaceWith(newGrandParendDiv);
                     } else {
                         tree.indentBullet(node);
-                        const newTreeDiv = renderTree(tree);
-                        (document.getElementsByClassName("silver-tree")[0] as HTMLElement).replaceWith(newTreeDiv);
+                        const newTreeDiv = renderTree(tree.root);
+                        document.getElementById("silver-tree")!!.replaceWith(newTreeDiv);
                     }
                 }
+                (document.getElementById(node.id)?.querySelector('.node-content') as HTMLDivElement).focus();
                 break;
             }
         }
@@ -134,11 +140,12 @@ export function renderNode(node: BulletNode): HTMLDivElement {
     return container;
 }
 
-export function renderTree(tree: SilverTree): HTMLDivElement {
+export function renderTree(root: SilverNode): HTMLDivElement {
     const container = document.createElement("div");
     container.className = "silver-tree";
-    if (tree.root.children && tree.root.children.length > 0) {
-        for (const child of tree.root.children) {
+    container.id = "silver-tree";
+    if (root.children && root.children.length > 0) {
+        for (const child of root.children) {
             container.appendChild(renderNode(child));
         }
     }

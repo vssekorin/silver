@@ -10,7 +10,7 @@ export const tree = new SilverTree();
 const openSaveFileBlock = document.querySelector("#open-save-file-block") as HTMLDivElement;
 
 function showApp() {
-    const treeElement = renderTree(tree);
+    const treeElement = renderTree(tree.root);
     const app = document.querySelector("#app") as HTMLDivElement;
     app.innerHTML = "";
 
@@ -26,6 +26,22 @@ function showApp() {
         localStorage.removeItem("filepath");
     });
     header.appendChild(newButton);
+
+    const openButton = document.createElement("button");
+    openButton.textContent = "Открыть";
+    openButton.addEventListener("click", async () => {
+        const filePath = await open({
+            multiple: false,
+            directory: false,
+        });
+        if (filePath) {
+            tree.clear();
+            localStorage.setItem("filepath", filePath);
+            await parseSilverFile(filePath);
+            showApp();
+        }
+    });
+    header.appendChild(openButton);
 
     const saveButton = document.createElement("button");
     saveButton.textContent = "Сохранить";
@@ -84,6 +100,9 @@ async function parseSilverFile(filepath: string) {
         let parent = lastNode[level - 1];
         const node = tree.addNode(id, type, meta, content, parent ?? tree.root);
         lastNode[level] = node;
+    }
+    if (tree.nodes.size == 0) {
+        tree.addNode("hello-0", "text", null, "Hello!", tree.root);
     }
 }
 
