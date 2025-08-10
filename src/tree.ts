@@ -89,13 +89,22 @@ export class SilverTree {
 
     public indentBullet(node: BulletNode): void {
         const nodeIndex = node.parent.children?.indexOf(node) ?? -1;
-        // console.log(nodeIndex);
         if (nodeIndex >= 1) {
             node.parent.children?.splice(nodeIndex, 1);
             const newParent = node.parent.children!![nodeIndex - 1];
-            // console.log(newParent);
             newParent.addChild(node);
             node.parent = newParent;
+        }
+    }
+
+    public unindentBullet(node: BulletNode): void {
+        if (node.parent instanceof BulletNode) {
+            const oldParent = node.parent;
+            const newParent = node.parent.parent;
+            const nodeIndex = oldParent.children?.indexOf(node);
+            oldParent.children?.splice(nodeIndex!!, 1);
+            node.parent = newParent;
+            newParent.addChildAfter(node, oldParent);
         }
     }
 

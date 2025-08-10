@@ -44,7 +44,8 @@ export function renderNode(node: BulletNode): HTMLDivElement {
         }
     });
     nodeContent.addEventListener("keydown", (e: KeyboardEvent) => {
-        switch (e.key) {
+        // используется code вместо key из-за Tab и Shift+Tab
+        switch (e.code) {
             case 'Enter': {
                 e.preventDefault();
 
@@ -80,11 +81,21 @@ export function renderNode(node: BulletNode): HTMLDivElement {
             }
             case 'Tab': {
                 e.preventDefault();
-
-                 if (e.shiftKey) {
-                     // TODO Shift+Tab Unindent
-                 } else {
-                    // TODO оптимизировать
+                if (e.shiftKey) {
+                    // TODO оптимизировать else
+                    if (node.parent instanceof BulletNode && node.parent.parent instanceof BulletNode) {
+                        const grandParent = node.parent.parent;
+                        const grandParentId = grandParent.id;
+                        tree.unindentBullet(node);
+                        const newGrandParendDiv = renderNode(grandParent);
+                        document.getElementById(grandParentId)?.replaceWith(newGrandParendDiv);
+                    } else {
+                        tree.unindentBullet(node);
+                        const newTreeDiv = renderTree(tree);
+                        (document.getElementsByClassName("silver-tree")[0] as HTMLElement).replaceWith(newTreeDiv);
+                    }
+                } else {
+                    // TODO оптимизировать else
                     if (node.parent instanceof BulletNode && node.parent.parent instanceof BulletNode) {
                         const grandParent = node.parent.parent;
                         const grandParentId = grandParent.id;
@@ -96,9 +107,9 @@ export function renderNode(node: BulletNode): HTMLDivElement {
                         const newTreeDiv = renderTree(tree);
                         (document.getElementsByClassName("silver-tree")[0] as HTMLElement).replaceWith(newTreeDiv);
                     }
-                 }
-                 break;
-             }
+                }
+                break;
+            }
         }
     });
     header.appendChild(nodeContent);
