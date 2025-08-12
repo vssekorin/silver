@@ -1,3 +1,35 @@
 .node-children {
-    margin-left: 30px;
+    margin-left: 50px;
 }
+
+.node-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toggle-icon {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.node-content {
+    flex: 1;
+    min-width: 0;
+}
+
+/* collapse/expand behavior */
+.node.collapsed > .node-children {
+    display: none;
+}
+
+.node .toggle-icon .icon-svg {
+    transition: transform 0.15s ease;
+}
+
+.node.expanded > .node-header .toggle-icon .icon-svg {
+    transform: rotate(90deg);
+}
+/* */

@@ -81,7 +81,7 @@ export function renderNode(node: BulletNode): HTMLDivElement {
         // используется code вместо key из-за Tab и Shift+Tab
         switch (e.code) {
             case 'Enter': {
-                if (!e.shiftKey) {
+                if (!e.shiftKey && !e.ctrlKey) {
                     e.preventDefault();
                     
                     const cursorPosition = window.getSelection()?.getRangeAt(0)?.startOffset || 0;
@@ -169,7 +169,13 @@ export function renderNode(node: BulletNode): HTMLDivElement {
     header.appendChild(nodeContent);
 
     if (node.children && node.children.length > 0) {
+        container.classList.add("expanded");
         const toggleIcon = createToggleIcon();
+        toggleIcon.addEventListener("click", (e: MouseEvent) => {
+            e.stopPropagation();
+            container.classList.toggle("collapsed");
+            container.classList.toggle("expanded");
+        });
         header.insertBefore(toggleIcon, nodeContent);
     }
 
