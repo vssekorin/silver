@@ -108,6 +108,32 @@ export class SilverTree {
         }
     }
 
+    public getLeftSibling(node: BulletNode): BulletNode | null {
+        const siblings = node.parent.children ?? [];
+        const index = siblings.indexOf(node);
+        if (index > 0) {
+            return siblings[index - 1];
+        }
+        return null;
+    }
+
+    public getRightSibling(node: BulletNode): BulletNode | null {
+        const siblings = node.parent.children ?? [];
+        const index = siblings.indexOf(node);
+        if (index !== -1 && index < siblings.length - 1) {
+            return siblings[index + 1];
+        }
+        return null;
+    }
+
+    public getDeepestLastDescendant(node: BulletNode): BulletNode {
+        let current: BulletNode = node;
+        while (current.children && current.children.length > 0) {
+            current = current.children[current.children.length - 1];
+        }
+        return current;
+    }
+
     public clear(): void {
         this.root = new RootNode();
         this.nodes = new Map();

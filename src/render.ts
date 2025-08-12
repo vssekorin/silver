@@ -33,6 +33,36 @@ function saveNodeContent(nodeDiv: HTMLDivElement, node: BulletNode): void {
     }
 }
 
+function getPreviousNode(node: BulletNode): BulletNode | null {
+    const leftSibling = tree.getLeftSibling(node);
+    if (leftSibling) {
+        return tree.getDeepestLastDescendant(leftSibling);
+    }
+    if (node.parent instanceof BulletNode) {
+        return node.parent;
+    }
+    return null;
+}
+
+function getNextNode(node: BulletNode): BulletNode | null {
+    if (node.children && node.children.length > 0) {
+        return node.children[0];
+    }
+    let current: BulletNode | null = node;
+    while (current) {
+        const rightSibling = tree.getRightSibling(current);
+        if (rightSibling) {
+            return rightSibling;
+        }
+        if (current.parent instanceof BulletNode) {
+            current = current.parent;
+        } else {
+            break;
+        }
+    }
+    return null;
+}
+
 export function renderNode(node: BulletNode): HTMLDivElement {
     const container = document.createElement("div");
     container.className = "node";
@@ -51,35 +81,37 @@ export function renderNode(node: BulletNode): HTMLDivElement {
         // используется code вместо key из-за Tab и Shift+Tab
         switch (e.code) {
             case 'Enter': {
-                e.preventDefault();
-
-                const cursorPosition = window.getSelection()?.getRangeAt(0)?.startOffset || 0;
-                const currentText = nodeContent.textContent || "";
-                const textBeforeCursor = currentText.substring(0, cursorPosition);
-                const textAfterCursor = currentText.substring(cursorPosition);
-
-                nodeContent.textContent = textBeforeCursor;
-                node.content = textBeforeCursor;
-
-                let newDiv;
-                if (!node.children || node.children.length == 0) {
-                    const newBullet = tree.addNodeAfter(uuidv7(), "text", null, textAfterCursor, node.parent, node);
-                    newDiv = renderNode(newBullet);
-                    if (node.parent instanceof BulletNode) {
-                        (document.getElementById(node.parent.id)!!.lastElementChild as HTMLElement).addAfter(newDiv, container);
+                if (!e.shiftKey) {
+                    e.preventDefault();
+                    
+                    const cursorPosition = window.getSelection()?.getRangeAt(0)?.startOffset || 0;
+                    const currentText = nodeContent.textContent || "";
+                    const textBeforeCursor = currentText.substring(0, cursorPosition);
+                    const textAfterCursor = currentText.substring(cursorPosition);
+                    
+                    nodeContent.textContent = textBeforeCursor;
+                    node.content = textBeforeCursor;
+                    
+                    let newDiv;
+                    if (!node.children || node.children.length == 0) {
+                        const newBullet = tree.addNodeAfter(uuidv7(), "text", null, textAfterCursor, node.parent, node);
+                        newDiv = renderNode(newBullet);
+                        if (node.parent instanceof BulletNode) {
+                            (document.getElementById(node.parent.id)!!.lastElementChild as HTMLElement).addAfter(newDiv, container);
+                        } else {
+                            document.getElementById("silver-tree")!!.addAfter(newDiv, container);
+                        }
                     } else {
-                        document.getElementById("silver-tree")!!.addAfter(newDiv, container);
+                        const newBullet = tree.addNodeFirst(uuidv7(), "text", null, textAfterCursor, node);
+                        newDiv = renderNode(newBullet);
+                        const childrenContainer = document.getElementById(node.id)?.lastElementChild!!;
+                        childrenContainer.insertBefore(newDiv, childrenContainer.firstChild);
                     }
-                } else {
-                    const newBullet = tree.addNodeFirst(uuidv7(), "text", null, textAfterCursor, node);
-                    newDiv = renderNode(newBullet);
-                    const childrenContainer = document.getElementById(node.id)?.lastElementChild!!;
-                    childrenContainer.insertBefore(newDiv, childrenContainer.firstChild);
-                }
-
-                const newContentDiv = newDiv.querySelector('.node-content') as HTMLDivElement;
-                if (newContentDiv) {
-                    newContentDiv.focus();
+                    
+                    const newContentDiv = newDiv.querySelector('.node-content') as HTMLDivElement;
+                    if (newContentDiv) {
+                        newContentDiv.focus();
+                    }
                 }
                 break;
             }
@@ -114,6 +146,22 @@ export function renderNode(node: BulletNode): HTMLDivElement {
                     }
                 }
                 (document.getElementById(node.id)?.querySelector('.node-content') as HTMLDivElement).focus();
+                break;
+            }
+            case 'ArrowUp': {
+                e.preventDefault();
+                const upNode = getPreviousNode(node);
+                if (upNode) {
+                    (document.getElementById(upNode.id)?.querySelector('.node-content') as HTMLDivElement).focus();
+                }
+                break;
+            }
+            case 'ArrowDown': {
+                e.preventDefault();
+                const downNode = getNextNode(node);
+                if (downNode) {
+                    (document.getElementById(downNode.id)?.querySelector('.node-content') as HTMLDivElement).focus();
+                }
                 break;
             }
         }
