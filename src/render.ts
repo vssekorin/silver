@@ -1,5 +1,5 @@
 import { v7 as uuidv7 } from "uuid";
-import { BulletNode, SilverNode } from "./tree";
+import { BulletNode, RootNode, SilverNode } from "./tree";
 import { tree } from "./main"
 
 declare global {
@@ -146,6 +146,24 @@ export function renderNode(node: BulletNode): HTMLDivElement {
                     }
                 }
                 (document.getElementById(node.id)?.querySelector('.node-content') as HTMLDivElement).focus();
+                break;
+            }
+            case 'Backspace': {
+                if (e.ctrlKey && e.shiftKey) {
+                    e.preventDefault();
+                    const next = getNextNode(node);
+                    const parent = node.parent;
+                    tree.removeNode(node);
+                    if ((parent.children && parent.children.length > 0) || parent instanceof RootNode) {
+                        container.remove();
+                    } else if (parent instanceof BulletNode) {
+                        const parentDiv = renderNode(parent);
+                        document.getElementById(parent.id)?.replaceWith(parentDiv);
+                    }
+                    if (next) {
+                        (document.getElementById(next.id)?.querySelector('.node-content') as HTMLDivElement).focus();
+                    }
+                }
                 break;
             }
             case 'ArrowUp': {

@@ -134,6 +134,14 @@ export class SilverTree {
         return current;
     }
 
+    public removeNode(node: BulletNode): void {
+        const nodeIndex = node.parent.children?.indexOf(node) ?? -1;
+        if (nodeIndex !== -1) {
+            node.parent.children?.splice(nodeIndex, 1);
+        }
+        this.nodes.delete(node.id);
+    }
+
     public clear(): void {
         this.root = new RootNode();
         this.nodes = new Map();
