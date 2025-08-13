@@ -33,3 +33,14 @@
     transform: rotate(90deg);
 }
 /* */
+
+.email-link {
+    color: #0066cc;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.email-link:hover {
+    color: #004499;
+    text-decoration: none;
+}

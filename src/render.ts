@@ -33,6 +33,17 @@ function saveNodeContent(nodeDiv: HTMLDivElement, node: BulletNode): void {
     }
 }
 
+function convertEmailsToLinks(text: string): string {
+    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+    return text.replace(emailRegex, (email) => {
+        return `<a href="mailto:${email}" class="email-link">${email}</a>`;
+    });
+}
+
+function displayText(text: string): string {
+    return convertEmailsToLinks(text);
+}
+
 function getPreviousNode(node: BulletNode): BulletNode | null {
     const leftSibling = tree.getLeftSibling(node);
     if (leftSibling) {
@@ -72,10 +83,11 @@ export function renderNode(node: BulletNode): HTMLDivElement {
 
     const nodeContent = document.createElement("div");
     nodeContent.className = "node-content";
-    nodeContent.textContent = node.content;
+    nodeContent.innerHTML = displayText(node.content);
     nodeContent.contentEditable = "true";
     nodeContent.addEventListener("blur", async () => {
         saveNodeContent(nodeContent, node);
+        nodeContent.innerHTML = displayText(nodeContent.textContent || "");
     });
     nodeContent.addEventListener("keydown", (e: KeyboardEvent) => {
         // используется code вместо key из-за Tab и Shift+Tab
@@ -89,7 +101,7 @@ export function renderNode(node: BulletNode): HTMLDivElement {
                     const textBeforeCursor = currentText.substring(0, cursorPosition);
                     const textAfterCursor = currentText.substring(cursorPosition);
                     
-                    nodeContent.textContent = textBeforeCursor;
+                    nodeContent.innerHTML = displayText(textBeforeCursor);
                     node.content = textBeforeCursor;
                     
                     let newDiv;
