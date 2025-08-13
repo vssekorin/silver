@@ -2,7 +2,8 @@ import { open, save } from '@tauri-apps/plugin-dialog';
 import { FILEPATH_KEY, DEFAULT_TREE } from './constants';
 import * as fs from "./fs";
 import { tree } from "./main"
-import { renderTree } from "./render"
+import { renderNode, renderTree } from "./render"
+import { v7 as uuidv7 } from "uuid";
 
 export function showOpenSaveBlock() {
     const openSaveFileBlock = document.querySelector("#open-save-file-block") as HTMLDivElement;
@@ -29,6 +30,25 @@ export function showOpenSaveBlock() {
     });
 
     openSaveFileBlock.style.display = "block";
+}
+
+function createPlusIcon(): HTMLElement {
+    const container = document.createElement("span");
+    container.className = "plus-icon";
+    container.innerHTML = `
+        <svg viewBox="0 0 16 16" width="12" height="12">
+            <path d="M8 3L8 13M3 8L13 8" stroke="currentColor" stroke-width="1.5" fill="none"/>
+        </svg>
+    `;
+    container.addEventListener("click", (e: MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const node = tree.addNode(uuidv7(), "text", null, "", tree.root);
+        const div = renderNode(node);
+        document.getElementById("silver-tree")?.appendChild(div);
+        (div.querySelector('.node-content') as HTMLDivElement).focus();
+    });
+    return container;
 }
 
 function showApp() {
@@ -98,5 +118,6 @@ function showApp() {
 
     app.appendChild(header);
     app.appendChild(treeElement);
+    app.appendChild(createPlusIcon());
     app.style.display = "block";
 }
