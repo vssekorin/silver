@@ -40,8 +40,15 @@ function convertEmailsToLinks(text: string): string {
     });
 }
 
+function convertUrlsToLinks(text: string): string {
+    const urlRegex = /(https?:\/\/[^\s]+|ftp:\/\/[^\s]+)/gi;
+    return text.replace(urlRegex, (url) => {
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="url-link">${url}</a>`;
+    });
+}
+
 function displayText(text: string): string {
-    return convertEmailsToLinks(text);
+    return convertEmailsToLinks(convertUrlsToLinks(text));
 }
 
 function getPreviousNode(node: BulletNode): BulletNode | null {

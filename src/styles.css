@@ -44,3 +44,14 @@
     color: #004499;
     text-decoration: none;
 }
+
+.url-link {
+    color: #0066cc;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.url-link:hover {
+    color: #004499;
+    text-decoration: none;
+}
