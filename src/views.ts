@@ -51,11 +51,23 @@ function createPlusIcon(): HTMLElement {
     return container;
 }
 
-function showApp() {
-    const treeElement = renderTree(tree.root);
-    const app = document.querySelector("#app") as HTMLDivElement;
-    app.innerHTML = "";
+function createHomeIcon(): HTMLElement {
+    const container = document.createElement("span");
+    container.className = "home-icon";
+    container.innerHTML = `
+        <svg viewBox="0 0 16 16" width="12" height="12">
+            <path d="M8 1L1 7V15H6V10H10V15H15V7L8 1Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+        </svg>
+    `;
+    container.addEventListener("click", (e: MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        showApp();
+    });
+    return container;
+}
 
+function appHeader(): HTMLDivElement {
     const header = document.createElement("div");
     header.className = "app-header";
 
@@ -115,8 +127,22 @@ function showApp() {
         }
     });
     header.appendChild(saveAsButton);
+    return header;
+}
 
-    app.appendChild(header);
+function appNodePath(): HTMLDivElement {
+    const path = document.createElement("div");
+    path.className = "node-path";
+    path.appendChild(createHomeIcon());
+    return path;
+}
+
+function showApp() {
+    const treeElement = renderTree(tree.root);
+    const app = document.querySelector("#app") as HTMLDivElement;
+    app.innerHTML = "";
+    app.appendChild(appHeader());
+    app.appendChild(appNodePath());
     app.appendChild(treeElement);
     app.appendChild(createPlusIcon());
     app.style.display = "block";
