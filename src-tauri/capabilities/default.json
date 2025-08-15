@@ -9,6 +9,7 @@
     "core:default",
     "dialog:default",
     "fs:allow-write-text-file",
-    "fs:allow-read-text-file-lines"
+    "fs:allow-read-text-file-lines",
+    "opener:default"
   ]
 }

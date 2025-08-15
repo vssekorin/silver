@@ -41,7 +41,7 @@ function convertEmailsToLinks(text: string): string {
 }
 
 function convertUrlsToLinks(text: string): string {
-    const urlRegex = /(https?:\/\/[^\s]+|ftp:\/\/[^\s]+)/gi;
+    const urlRegex = /(https?:\/\/[^\s]+)/gi;
     return text.replace(urlRegex, (url) => {
         return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="url-link">${url}</a>`;
     });
