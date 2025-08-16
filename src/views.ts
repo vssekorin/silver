@@ -43,7 +43,7 @@ function createPlusIcon(): HTMLElement {
     container.addEventListener("click", (e: MouseEvent) => {
         e.stopPropagation();
         e.preventDefault();
-        const node = tree.addNode(uuidv7(), "text", null, "", tree.root);
+        const node = tree.addNode(uuidv7(), "text", new Map<string, any>(), "", tree.root);
         const div = renderNode(node);
         document.getElementById("silver-tree")?.appendChild(div);
         (div.querySelector('.node-content') as HTMLDivElement).focus();

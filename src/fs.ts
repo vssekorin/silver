@@ -18,7 +18,7 @@ export async function parseSilverFile(filepath: string) {
         }
         const id = parts[1];
         const type = parts[2];
-        const meta = parts[3].length > 0 ? JSON.parse(parts[3]) : null;
+        const meta = parts[3].length > 0 ? new Map<string, any>(Object.entries(JSON.parse(parts[3]))) : new Map<string, any>();
         const content = parts.slice(4).join('|');
 
         let parent = lastNode[level - 1];
@@ -35,7 +35,7 @@ function serializeTree(): string[] {
 
     function serializeNode(node: SilverNode, level: number = -1): void {
         if (node instanceof BulletNode) {
-            const metaStr = node.meta ? JSON.stringify(node.meta) : '';
+            const metaStr = JSON.stringify(Object.fromEntries(node.meta));
             const line = `${level}|${node.id}|${node.type}|${metaStr}|${node.content}`;
             lines.push(line);
         }

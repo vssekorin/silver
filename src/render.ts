@@ -113,7 +113,7 @@ export function renderNode(node: BulletNode): HTMLDivElement {
                     
                     let newDiv;
                     if (!node.children || node.children.length == 0) {
-                        const newBullet = tree.addNodeAfter(uuidv7(), "text", null, textAfterCursor, node.parent, node);
+                        const newBullet = tree.addNodeAfter(uuidv7(), "text", new Map<string, any>(), textAfterCursor, node.parent, node);
                         newDiv = renderNode(newBullet);
                         if (node.parent instanceof BulletNode) {
                             (document.getElementById(node.parent.id)!!.lastElementChild as HTMLElement).addAfter(newDiv, container);
@@ -121,7 +121,7 @@ export function renderNode(node: BulletNode): HTMLDivElement {
                             document.getElementById("silver-tree")!!.addAfter(newDiv, container);
                         }
                     } else {
-                        const newBullet = tree.addNodeFirst(uuidv7(), "text", null, textAfterCursor, node);
+                        const newBullet = tree.addNodeFirst(uuidv7(), "text", new Map<string, any>(), textAfterCursor, node);
                         newDiv = renderNode(newBullet);
                         const childrenContainer = document.getElementById(node.id)?.lastElementChild!!;
                         childrenContainer.insertBefore(newDiv, childrenContainer.firstChild);
@@ -205,20 +205,26 @@ export function renderNode(node: BulletNode): HTMLDivElement {
     });
     header.appendChild(nodeContent);
 
-    if (node.children && node.children.length > 0) {
+    if (node.meta.get("collapsed")) {
+        container.classList.add("collapsed");
+    } else {
         container.classList.add("expanded");
-        const toggleIcon = createToggleIcon();
-        toggleIcon.addEventListener("click", (e: MouseEvent) => {
-            e.stopPropagation();
-            container.classList.toggle("collapsed");
-            container.classList.toggle("expanded");
-        });
-        header.insertBefore(toggleIcon, nodeContent);
     }
+    const toggleIcon = createToggleIcon();
+    toggleIcon.style.visibility = "hidden";
+    toggleIcon.addEventListener("click", (e: MouseEvent) => {
+        e.stopPropagation();
+        container.classList.toggle("collapsed");
+        container.classList.toggle("expanded");
+        if (!node.meta) node.meta = new Map<string, any>;
+        node.meta.set("collapsed", container.classList.contains("collapsed"));
+    });
+    header.insertBefore(toggleIcon, nodeContent);
 
     container.appendChild(header);
 
     if (node.children && node.children.length > 0) {
+        toggleIcon.style.visibility = "visible";
         const childrenContainer = document.createElement("div");
         childrenContainer.className = "node-children";
 

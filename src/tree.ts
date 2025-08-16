@@ -43,11 +43,11 @@ export class RootNode extends SilverNode {}
 export class BulletNode extends SilverNode {
     id: string;
     type: string;
-    meta: any;
+    meta: Map<string, any>;
     content: string;
     parent: SilverNode;
 
-    constructor(id: string, type: string, meta: any, content: string, parent: SilverNode) {
+    constructor(id: string, type: string, meta: Map<string, any>, content: string, parent: SilverNode) {
         super();
         this.id = id;
         this.type = type;
@@ -66,21 +66,21 @@ export class SilverTree {
         this.nodes = new Map();
     }
 
-    public addNode(id: string, type: string, meta: any, content: string, parent: SilverNode): BulletNode {
+    public addNode(id: string, type: string, meta: Map<string, any>, content: string, parent: SilverNode): BulletNode {
         let node = new BulletNode(id, type, meta, content, parent);
         parent.addChild(node);
         this.nodes.set(id, node);
         return node;
     }
 
-    public addNodeFirst(id: string, type: string, meta: any, content: string, parent: SilverNode): BulletNode {
+    public addNodeFirst(id: string, type: string, meta: Map<string, any>, content: string, parent: SilverNode): BulletNode {
         let node = new BulletNode(id, type, meta, content, parent);
         parent.addChildFirst(node);
         this.nodes.set(id, node);
         return node;
     }
 
-    public addNodeAfter(id: string, type: string, meta: any, content: string, parent: SilverNode, reference: BulletNode): BulletNode {
+    public addNodeAfter(id: string, type: string, meta: Map<string, any>, content: string, parent: SilverNode, reference: BulletNode): BulletNode {
         let node = new BulletNode(id, type, meta, content, parent);
         parent.addChildAfter(node, reference);
         this.nodes.set(id, node);
