@@ -15,6 +15,28 @@
     flex-shrink: 0;
 }
 
+.circle-icon {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.square-icon {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.home-icon {
+    cursor: pointer;
+}
+
+.node-path-item {
+    cursor: pointer;
+}
+
 .node-content {
     flex: 1;
     min-width: 0;

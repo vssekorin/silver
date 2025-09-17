@@ -1,15 +1,25 @@
 import { open, save } from '@tauri-apps/plugin-dialog';
-import { FILEPATH_KEY, DEFAULT_TREE } from './constants';
-import * as fs from "./fs";
-import { tree } from "./main"
-import { renderNode, renderTree } from "./render"
-import { v7 as uuidv7 } from "uuid";
+import * as action from './actions';
+import * as component from './components';
+import { FILEPATH_KEY } from './constants';
+import * as fs from './fs';
+import { state } from './state';
+import { BulletNode, RootNode, SilverNode } from './tree';
 
-export function showOpenSaveBlock() {
-    const openSaveFileBlock = document.querySelector("#open-save-file-block") as HTMLDivElement;
-    const selectFileBtn = openSaveFileBlock.querySelector("#select-file-btn") as HTMLButtonElement;
-    const createFileBtn = openSaveFileBlock.querySelector("#create-file-btn") as HTMLButtonElement;
+const app = document.querySelector("#app") as HTMLDivElement;
 
+export function render(view: HTMLDivElement) {
+    app.innerHTML = "";
+    app.appendChild(view);
+}
+
+export function openSave(): HTMLDivElement {
+    const container = document.createElement("div");
+    container.className = "open-save";
+
+    const selectFileBtn = document.createElement("button");
+    selectFileBtn.className = "select-create-file-btn";
+    selectFileBtn.textContent = "Выбрать файл";
     selectFileBtn.addEventListener("click", async () => {
         const filePath = await open({
             multiple: false,
@@ -17,133 +27,223 @@ export function showOpenSaveBlock() {
         });
         if (filePath) {
             localStorage.setItem(FILEPATH_KEY, filePath);
-            await fs.parseSilverFile(filePath);
-            showApp();
-            openSaveFileBlock.style.display = "none";
+            await fs.read(filePath);
+            render(page(state.mainRoot));
         }
     });
-    createFileBtn.addEventListener("click", async () => {
-        DEFAULT_TREE(tree);
-        showApp();
+
+    const createFileBtn = document.createElement("button");
+    createFileBtn.className = "select-create-file-btn";
+    createFileBtn.textContent = "Создать новый";
+    createFileBtn.addEventListener("click", () => {
+        action.setDefaultTree();
+        render(page(state.mainRoot));
         localStorage.removeItem(FILEPATH_KEY);
-        openSaveFileBlock.style.display = "none";
     });
 
-    openSaveFileBlock.style.display = "block";
-}
-
-function createPlusIcon(): HTMLElement {
-    const container = document.createElement("span");
-    container.className = "plus-icon";
-    container.innerHTML = `
-        <svg viewBox="0 0 16 16" width="12" height="12">
-            <path d="M8 3L8 13M3 8L13 8" stroke="currentColor" stroke-width="1.5" fill="none"/>
-        </svg>
-    `;
-    container.addEventListener("click", (e: MouseEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
-        const node = tree.addNode(uuidv7(), "text", new Map<string, any>(), "", tree.root);
-        const div = renderNode(node);
-        document.getElementById("silver-tree")?.appendChild(div);
-        (div.querySelector('.node-content') as HTMLDivElement).focus();
-    });
+    container.appendChild(selectFileBtn);
+    container.appendChild(createFileBtn);
     return container;
 }
 
-function createHomeIcon(): HTMLElement {
-    const container = document.createElement("span");
-    container.className = "home-icon";
-    container.innerHTML = `
-        <svg viewBox="0 0 16 16" width="12" height="12">
-            <path d="M8 1L1 7V15H6V10H10V15H15V7L8 1Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-        </svg>
-    `;
-    container.addEventListener("click", (e: MouseEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
-        showApp();
-    });
+export function page(root: SilverNode): HTMLDivElement {
+    const container = document.createElement("div");
+    container.appendChild(header());
+    container.appendChild(nodePath(root));
+    container.appendChild(tree(root));
     return container;
 }
 
-function appHeader(): HTMLDivElement {
+function header(): HTMLDivElement {
     const header = document.createElement("div");
     header.className = "app-header";
 
-    const newButton = document.createElement("button");
-    newButton.textContent = "Новый";
-    newButton.addEventListener("click", () => {
-        tree.clear();
-        DEFAULT_TREE(tree);
-        showApp();
+    const createBtn = document.createElement("button");
+    createBtn.textContent = "Новый";
+    createBtn.addEventListener("click", () => {
+        action.setDefaultTree();
+        render(page(state.mainRoot));
         localStorage.removeItem(FILEPATH_KEY);
     });
-    header.appendChild(newButton);
+    header.appendChild(createBtn);
 
-    const openButton = document.createElement("button");
-    openButton.textContent = "Открыть";
-    openButton.addEventListener("click", async () => {
+    const openBtn = document.createElement("button");
+    openBtn.textContent = "Открыть";
+    openBtn.addEventListener("click", async () => {
         const filePath = await open({
             multiple: false,
             directory: false,
         });
         if (filePath) {
-            tree.clear();
             localStorage.setItem(FILEPATH_KEY, filePath);
-            await fs.parseSilverFile(filePath);
-            showApp();
+            await fs.read(filePath);
+            render(page(state.mainRoot));
         }
     });
-    header.appendChild(openButton);
+    header.appendChild(openBtn);
 
-    const saveButton = document.createElement("button");
-    saveButton.textContent = "Сохранить";
-    saveButton.addEventListener("click", async () => {
-        const filepath = localStorage.getItem(FILEPATH_KEY);
-        if (filepath) {
-            fs.saveToFile(filepath);
+    const saveBtn = document.createElement("button");
+    saveBtn.textContent = "Сохранить";
+    saveBtn.addEventListener("click", async () => {
+        const filePath = localStorage.getItem(FILEPATH_KEY);
+        if (filePath) {
+            fs.write(filePath);
         } else {
-            const path = await save({
+            const newFilePath = await save({
                 filters: [{ name: 'Silver Filter', extensions: ['silver']}],
             });
-            if (path) {
-                localStorage.setItem(FILEPATH_KEY, path);
-                fs.saveToFile(path);
+            if (newFilePath) {
+                localStorage.setItem(FILEPATH_KEY, newFilePath);
+                fs.write(newFilePath);
             }
         }
     });
-    header.appendChild(saveButton);
+    header.appendChild(saveBtn);
 
-    const saveAsButton = document.createElement("button");
-    saveAsButton.textContent = "Сохранить как";
-    saveAsButton.addEventListener("click", async () => {
-        const path = await save({
+    const saveAsBtn = document.createElement("button");
+    saveAsBtn.textContent = "Сохранить как";
+    saveAsBtn.addEventListener("click", async () => {
+        const filePath = await save({
             filters: [{ name: 'Silver Filter', extensions: ['silver']}],
         });
-        if (path) {
-            localStorage.setItem(FILEPATH_KEY, path);
-            fs.saveToFile(path);
+        if (filePath) {
+            localStorage.setItem(FILEPATH_KEY, filePath);
+            fs.write(filePath);
         }
     });
-    header.appendChild(saveAsButton);
+    header.appendChild(saveAsBtn);
+
     return header;
 }
 
-function appNodePath(): HTMLDivElement {
+function nodePath(node: SilverNode): HTMLDivElement {
     const path = document.createElement("div");
     path.className = "node-path";
-    path.appendChild(createHomeIcon());
+
+    const homeIcon = component.homeIcon();
+    homeIcon.addEventListener("click", (e: MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        render(page(state.mainRoot));
+    });
+    path.appendChild(homeIcon);
+
+    const pathNodes: BulletNode[] = [];
+    let cur = node;
+    while (!(cur instanceof RootNode)) {
+        pathNodes.push(cur as BulletNode);
+        cur = (cur as BulletNode).parent;
+    }
+    pathNodes.reverse();
+    pathNodes.forEach((n: BulletNode) => {
+        path.appendChild(component.separator());
+        path.appendChild(nodePathItem(n));
+    });
+
     return path;
 }
 
-function showApp() {
-    const treeElement = renderTree(tree.root);
-    const app = document.querySelector("#app") as HTMLDivElement;
-    app.innerHTML = "";
-    app.appendChild(appHeader());
-    app.appendChild(appNodePath());
-    app.appendChild(treeElement);
-    app.appendChild(createPlusIcon());
-    app.style.display = "block";
+function nodePathItem(node: BulletNode): HTMLElement {
+    const item = document.createElement("span");
+    item.className = "node-path-item";
+    const cleanContent = node.content.replace(/\0/g, '').trim();
+    item.textContent = cleanContent.length <= 20 ? cleanContent : (cleanContent.substring(0, 17) + "...");
+    item.addEventListener("click", (e: MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        render(page(node));
+    });
+    return item;
+}
+
+function tree(root: SilverNode): HTMLDivElement {
+    const container = document.createElement("div");
+    container.className = "silver-tree";
+    container.id = "silver-tree";
+    if (root !== state.mainRoot) {
+        container.appendChild(treeHeading(root as BulletNode));
+    }
+    if (root.children && root.children.length > 0) {
+        for (const child of root.children) {
+            container.appendChild(treeNode(child));
+        }
+    }
+    return container;
+}
+
+function treeHeading(node: BulletNode): HTMLDivElement {
+    const container = document.createElement("div");
+    const h = document.createElement("h3");
+    h.textContent = node.content;
+    container.appendChild(h);
+    return container;
+}
+
+function treeNode(node: BulletNode): HTMLDivElement {
+    const container = document.createElement("div");
+    container.className = "node";
+    container.id = node.id;
+
+    const header = document.createElement("div");
+    header.className = "node-header";
+
+    const collapsedIcon = component.toggleIcon();
+    collapsedIcon.style.visibility = "hidden";
+    collapsedIcon.addEventListener("click", (e: MouseEvent) => {
+        e.stopPropagation();
+        container.classList.toggle("collapsed");
+        container.classList.toggle("expanded");
+        if (!node.meta) node.meta = new Map<string, any>;
+        node.meta.set("collapsed", container.classList.contains("collapsed"));
+    });
+    header.appendChild(collapsedIcon);
+
+    const actionIcon = component.circleIcon();
+    header.appendChild(actionIcon);
+
+    const zoomAction = component.squareIcon();
+    zoomAction.addEventListener("click", (e: MouseEvent) => {
+        e.stopPropagation();
+        render(page(node));
+    });
+    header.appendChild(zoomAction);
+
+    const nodeContent = document.createElement("div");
+    nodeContent.className = "node-content";
+    nodeContent.style.whiteSpace = 'pre-wrap';
+    nodeContent.textContent = node.content;
+    nodeContent.contentEditable = "true";
+    nodeContent.addEventListener("blur", async () => {
+        saveNodeContent(nodeContent, node);
+        nodeContent.textContent = nodeContent.textContent || "";
+    });
+    header.appendChild(nodeContent);
+
+    if (node.meta.get("collapsed")) {
+        container.classList.add("collapsed");
+    } else {
+        container.classList.add("expanded");
+    }
+
+    container.appendChild(header);
+
+    if (node.children && node.children.length > 0) {
+        collapsedIcon.style.visibility = "visible";
+        const childrenContainer = document.createElement("div");
+        childrenContainer.className = "node-children";
+
+        for (const bullet of node.children) {
+            childrenContainer.appendChild(treeNode(bullet));
+        }
+        container.appendChild(childrenContainer);
+    }
+
+    return container;
+}
+
+function saveNodeContent(nodeDiv: HTMLDivElement, node: BulletNode): void {
+    const newContent = nodeDiv.textContent || "";
+    if (newContent !== node.content) {
+        node.content = newContent;
+    }
 }
