@@ -6,6 +6,19 @@ import * as fs from './fs';
 import { state } from './state';
 import { BulletNode, RootNode, SilverNode } from './tree';
 
+declare global {
+    interface HTMLElement {
+        insertAfter(newNode: HTMLElement, referenceNode: HTMLElement): void;
+    }
+}
+
+HTMLElement.prototype.insertAfter = function(newNode: HTMLElement, referenceNode: HTMLElement): void {
+    if (referenceNode.parentNode !== this) {
+      throw new Error("Reference node is not a child of this element");
+    }
+    this.insertBefore(newNode, referenceNode.nextSibling);
+};
+
 const app = document.querySelector("#app") as HTMLDivElement;
 
 export function render(view: HTMLDivElement) {
@@ -165,7 +178,7 @@ function tree(root: SilverNode): HTMLDivElement {
     }
     if (root.children && root.children.length > 0) {
         for (const child of root.children) {
-            container.appendChild(treeNode(child));
+            container.appendChild(treeNode(root, child));
         }
     }
     return container;
@@ -179,7 +192,7 @@ function treeHeading(node: BulletNode): HTMLDivElement {
     return container;
 }
 
-function treeNode(node: BulletNode): HTMLDivElement {
+function treeNode(rootNode: SilverNode, node: BulletNode): HTMLDivElement {
     const container = document.createElement("div");
     container.className = "node";
     container.id = node.id;
@@ -187,19 +200,19 @@ function treeNode(node: BulletNode): HTMLDivElement {
     const header = document.createElement("div");
     header.className = "node-header";
 
-    const collapsedIcon = component.toggleIcon();
-    collapsedIcon.style.visibility = "hidden";
-    collapsedIcon.addEventListener("click", (e: MouseEvent) => {
+    const collapsedAction = component.toggleIcon();
+    collapsedAction.style.visibility = "hidden";
+    collapsedAction.addEventListener("click", (e: MouseEvent) => {
         e.stopPropagation();
         container.classList.toggle("collapsed");
         container.classList.toggle("expanded");
         if (!node.meta) node.meta = new Map<string, any>;
         node.meta.set("collapsed", container.classList.contains("collapsed"));
     });
-    header.appendChild(collapsedIcon);
+    header.appendChild(collapsedAction);
 
-    const actionIcon = component.circleIcon();
-    header.appendChild(actionIcon);
+    const menuAction = component.circleIcon();
+    header.appendChild(menuAction);
 
     const zoomAction = component.squareIcon();
     zoomAction.addEventListener("click", (e: MouseEvent) => {
@@ -217,6 +230,40 @@ function treeNode(node: BulletNode): HTMLDivElement {
         saveNodeContent(nodeContent, node);
         nodeContent.textContent = nodeContent.textContent || "";
     });
+    nodeContent.addEventListener("keydown", (e: KeyboardEvent) => {
+        switch (e.code) {
+            case 'Enter': {
+                if (!e.shiftKey && !e.ctrlKey) {
+                    e.preventDefault();
+
+                    const cursorPosition = window.getSelection()?.getRangeAt(0)?.startOffset || 0;
+                    const currentText = nodeContent.textContent || "";
+                    const textBeforeCursor = currentText.substring(0, cursorPosition);
+                    const textAfterCursor = currentText.substring(cursorPosition);
+
+                    nodeContent.textContent = node.content = textBeforeCursor;
+
+                    let newDiv;
+                    if (!node.children || node.children?.length == 0) {
+                        const newContentNode = action.addNodeAfter(textAfterCursor, node);
+                        newDiv = treeNode(rootNode, newContentNode);
+                        if (node.parent === rootNode) {
+                            document.getElementById("silver-tree")!!.insertAfter(newDiv, container);
+                        } else {
+                            (document.getElementById((node.parent as BulletNode).id)!!.lastElementChild as HTMLElement).insertAfter(newDiv, container);
+                        }
+                    } else {
+                        const newContentNode = action.addFirstChildNode(textAfterCursor, node);
+                        newDiv = treeNode(rootNode, newContentNode);
+                        const childrenContainer = document.getElementById(node.id)?.lastElementChild!!;
+                        childrenContainer.insertBefore(newDiv, childrenContainer.firstChild);
+                    }
+                    (newDiv.querySelector('.node-content') as HTMLDivElement).focus();
+                }
+                break;
+            }
+        }
+    });
     header.appendChild(nodeContent);
 
     if (node.meta.get("collapsed")) {
@@ -228,12 +275,12 @@ function treeNode(node: BulletNode): HTMLDivElement {
     container.appendChild(header);
 
     if (node.children && node.children.length > 0) {
-        collapsedIcon.style.visibility = "visible";
+        collapsedAction.style.visibility = "visible";
         const childrenContainer = document.createElement("div");
         childrenContainer.className = "node-children";
 
         for (const bullet of node.children) {
-            childrenContainer.appendChild(treeNode(bullet));
+            childrenContainer.appendChild(treeNode(rootNode, bullet));
         }
         container.appendChild(childrenContainer);
     }
