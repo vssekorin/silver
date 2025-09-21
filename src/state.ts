@@ -1,9 +1,9 @@
-import { BulletNode, RootNode } from "./tree";
+import { ContentNode, RootNode } from "./tree";
 
 class State {
     private static instance: State;
 
-    public nodes: Map<string, BulletNode> = new Map();
+    public nodes: Map<string, ContentNode> = new Map();
     public mainRoot: RootNode = new RootNode();
 
     private constructor() {}

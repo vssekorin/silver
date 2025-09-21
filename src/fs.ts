@@ -1,7 +1,7 @@
 import { readTextFileLines, writeTextFile } from '@tauri-apps/plugin-fs';
 import * as action from './actions';
 import { state } from './state';
-import { BulletNode, SilverNode } from "./tree";
+import { ContentNode, SilverNode } from "./tree";
 
 const nodeLineMarker = "=:sn:=> ";
 
@@ -67,7 +67,7 @@ function serializeTree(): string[] {
     const lines: string[] = [];
 
     function serializeNode(node: SilverNode, level: number = -1): void {
-        if (node instanceof BulletNode) {
+        if (node instanceof ContentNode) {
             const metaStr = JSON.stringify(Object.fromEntries(node.meta));
             const line = `${nodeLineMarker}${level}|${node.id}|${node.type}|${metaStr}|${node.content}`;
             lines.push(line);

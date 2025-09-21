@@ -1,10 +1,10 @@
 export abstract class SilverNode {
-    children?: BulletNode[];
+    children?: ContentNode[];
 
     constructor() {
     }
 
-    public addChild(child: BulletNode) {
+    public addChild(child: ContentNode) {
         if (!this.children) {
             this.children = [child];
         } else {
@@ -12,7 +12,7 @@ export abstract class SilverNode {
         }
     }
 
-    public addChildAtPosition(child: BulletNode, position: number) {
+    public addChildAtPosition(child: ContentNode, position: number) {
         if (!this.children) {
             this.children = [child];
         } else {
@@ -20,7 +20,7 @@ export abstract class SilverNode {
         }
     }
 
-    public addChildAfter(child: BulletNode, referenceNode: BulletNode) {
+    public addChildAfter(child: ContentNode, referenceNode: ContentNode) {
         const index = this.children?.indexOf(referenceNode) ?? -1;
         if (index !== -1) {
             this.addChildAtPosition(child, index + 1);
@@ -29,7 +29,7 @@ export abstract class SilverNode {
         }
     }
 
-    public addChildFirst(child: BulletNode) {
+    public addChildFirst(child: ContentNode) {
         if (!this.children) {
             this.children = [child];
         } else {
@@ -40,7 +40,7 @@ export abstract class SilverNode {
 
 export class RootNode extends SilverNode {}
 
-export class BulletNode extends SilverNode {
+export class ContentNode extends SilverNode {
     id: string;
     type: string;
     meta: Map<string, any>;

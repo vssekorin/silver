@@ -4,7 +4,7 @@ import * as component from './components';
 import { FILEPATH_KEY } from './constants';
 import * as fs from './fs';
 import { state } from './state';
-import { BulletNode, RootNode, SilverNode } from './tree';
+import { ContentNode, RootNode, SilverNode } from './tree';
 
 declare global {
     interface HTMLElement {
@@ -141,14 +141,14 @@ function nodePath(node: SilverNode): HTMLDivElement {
     });
     path.appendChild(homeIcon);
 
-    const pathNodes: BulletNode[] = [];
+    const pathNodes: ContentNode[] = [];
     let cur = node;
     while (!(cur instanceof RootNode)) {
-        pathNodes.push(cur as BulletNode);
-        cur = (cur as BulletNode).parent;
+        pathNodes.push(cur as ContentNode);
+        cur = (cur as ContentNode).parent;
     }
     pathNodes.reverse();
-    pathNodes.forEach((n: BulletNode) => {
+    pathNodes.forEach((n: ContentNode) => {
         path.appendChild(component.separator());
         path.appendChild(nodePathItem(n));
     });
@@ -156,7 +156,7 @@ function nodePath(node: SilverNode): HTMLDivElement {
     return path;
 }
 
-function nodePathItem(node: BulletNode): HTMLElement {
+function nodePathItem(node: ContentNode): HTMLElement {
     const item = document.createElement("span");
     item.className = "node-path-item";
     const cleanContent = node.content.replace(/\0/g, '').trim();
@@ -174,7 +174,7 @@ function tree(root: SilverNode): HTMLDivElement {
     container.className = "silver-tree";
     container.id = "silver-tree";
     if (root !== state.mainRoot) {
-        container.appendChild(treeHeading(root as BulletNode));
+        container.appendChild(treeHeading(root as ContentNode));
     }
     if (root.children && root.children.length > 0) {
         for (const child of root.children) {
@@ -184,7 +184,7 @@ function tree(root: SilverNode): HTMLDivElement {
     return container;
 }
 
-function treeHeading(node: BulletNode): HTMLDivElement {
+function treeHeading(node: ContentNode): HTMLDivElement {
     const container = document.createElement("div");
     const h = document.createElement("h3");
     h.textContent = node.content;
@@ -192,7 +192,7 @@ function treeHeading(node: BulletNode): HTMLDivElement {
     return container;
 }
 
-function treeNode(rootNode: SilverNode, node: BulletNode): HTMLDivElement {
+function treeNode(rootNode: SilverNode, node: ContentNode): HTMLDivElement {
     const container = document.createElement("div");
     container.className = "node";
     container.id = node.id;
@@ -250,7 +250,7 @@ function treeNode(rootNode: SilverNode, node: BulletNode): HTMLDivElement {
                         if (node.parent === rootNode) {
                             document.getElementById("silver-tree")!!.insertAfter(newDiv, container);
                         } else {
-                            (document.getElementById((node.parent as BulletNode).id)!!.lastElementChild as HTMLElement).insertAfter(newDiv, container);
+                            (document.getElementById((node.parent as ContentNode).id)!!.lastElementChild as HTMLElement).insertAfter(newDiv, container);
                         }
                     } else {
                         const newContentNode = action.addFirstChildNode(textAfterCursor, node);
@@ -279,8 +279,8 @@ function treeNode(rootNode: SilverNode, node: BulletNode): HTMLDivElement {
         const childrenContainer = document.createElement("div");
         childrenContainer.className = "node-children";
 
-        for (const bullet of node.children) {
-            childrenContainer.appendChild(treeNode(rootNode, bullet));
+        for (const child of node.children) {
+            childrenContainer.appendChild(treeNode(rootNode, child));
         }
         container.appendChild(childrenContainer);
     }
@@ -288,7 +288,7 @@ function treeNode(rootNode: SilverNode, node: BulletNode): HTMLDivElement {
     return container;
 }
 
-function saveNodeContent(nodeDiv: HTMLDivElement, node: BulletNode): void {
+function saveNodeContent(nodeDiv: HTMLDivElement, node: ContentNode): void {
     const newContent = nodeDiv.textContent || "";
     if (newContent !== node.content) {
         node.content = newContent;
