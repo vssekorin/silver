@@ -222,7 +222,7 @@ function treeNode(rootNode: SilverNode, node: ContentNode): HTMLDivElement {
     header.appendChild(zoomAction);
 
     const nodeContent = document.createElement("div");
-    nodeContent.className = "node-content";
+    nodeContent.className = "node-content " + node.type;
     nodeContent.style.whiteSpace = 'pre-wrap';
     nodeContent.textContent = node.content;
     nodeContent.contentEditable = "true";
@@ -260,6 +260,10 @@ function treeNode(rootNode: SilverNode, node: ContentNode): HTMLDivElement {
                         childrenContainer.insertBefore(newDiv, childrenContainer.firstChild);
                     }
                     (newDiv.querySelector('.node-content') as HTMLDivElement).focus();
+                } else if (e.ctrlKey) {
+                    // Complete and uncomplete
+                    action.toggleComplete(node);
+                    rerender(node, rootNode);
                 }
                 break;
             }
@@ -269,14 +273,12 @@ function treeNode(rootNode: SilverNode, node: ContentNode): HTMLDivElement {
                 if (e.shiftKey) {
                     // outdent
                     if (action.outdentNode(node, rootNode)) {
-                        render(page(rootNode));
-                        (document.getElementById(node.id)!!.querySelector('.node-content') as HTMLDivElement).focus();
+                        rerender(node, rootNode);
                     }
                 } else {
                     // indent
                     if (action.indentNode(node)) {
-                        render(page(rootNode));
-                        (document.getElementById(node.id)!!.querySelector('.node-content') as HTMLDivElement).focus();
+                        rerender(node, rootNode);
                     }
                 }
                 break;
@@ -312,4 +314,10 @@ function saveNodeContent(nodeDiv: HTMLDivElement, node: ContentNode): void {
     if (newContent !== node.content) {
         node.content = newContent;
     }
+}
+
+// Удалить и сделать специфичные реализации.
+function rerender (node: ContentNode, rootNode: SilverNode) {
+    render(page(rootNode));
+    (document.getElementById(node.id)!!.querySelector('.node-content') as HTMLDivElement).focus();
 }

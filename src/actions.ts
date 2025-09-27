@@ -79,3 +79,11 @@ export function outdentNode(node: ContentNode, rootNode: SilverNode): boolean {
     
     return true;
 }
+
+export function toggleComplete(node: ContentNode) {
+    if (node.type == "text") {
+        node.type = "done";
+    } else if (node.type == "done") {
+        node.type = "text";
+    }
+}
