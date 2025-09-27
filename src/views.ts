@@ -234,6 +234,7 @@ function treeNode(rootNode: SilverNode, node: ContentNode): HTMLDivElement {
         switch (e.code) {
             case 'Enter': {
                 if (!e.shiftKey && !e.ctrlKey) {
+                    // new node
                     e.preventDefault();
 
                     const cursorPosition = window.getSelection()?.getRangeAt(0)?.startOffset || 0;
@@ -259,6 +260,24 @@ function treeNode(rootNode: SilverNode, node: ContentNode): HTMLDivElement {
                         childrenContainer.insertBefore(newDiv, childrenContainer.firstChild);
                     }
                     (newDiv.querySelector('.node-content') as HTMLDivElement).focus();
+                }
+                break;
+            }
+            case 'Tab': {
+                e.preventDefault();
+                saveNodeContent(nodeContent, node);
+                if (e.shiftKey) {
+                    // outdent
+                    if (action.outdentNode(node, rootNode)) {
+                        render(page(rootNode));
+                        (document.getElementById(node.id)!!.querySelector('.node-content') as HTMLDivElement).focus();
+                    }
+                } else {
+                    // indent
+                    if (action.indentNode(node)) {
+                        render(page(rootNode));
+                        (document.getElementById(node.id)!!.querySelector('.node-content') as HTMLDivElement).focus();
+                    }
                 }
                 break;
             }

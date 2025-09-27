@@ -32,3 +32,50 @@ export function addFirstChildNode(content: string, parent: ContentNode): Content
     state.nodes.set(node.id, node);
     return node;
 }
+
+export function indentNode(node: ContentNode): boolean {
+    // Find the previous sibling
+    const parent = node.parent;
+    if (!parent.children) return false;
+    
+    const currentIndex = parent.children.indexOf(node);
+    if (currentIndex <= 0) return false; // No previous sibling
+    
+    const previousSibling = parent.children[currentIndex - 1];
+    
+    // Remove node from current parent
+    parent.children.splice(currentIndex, 1);
+    
+    // Add node as child of previous sibling
+    previousSibling.addChild(node);
+    node.parent = previousSibling;
+    
+    return true;
+}
+
+export function outdentNode(node: ContentNode, rootNode: SilverNode): boolean {
+    // Can only outdent if we have a parent that's not the root
+    if (node.parent == rootNode) return false;
+    
+    const parent = node.parent as ContentNode;
+    const grandparent = parent.parent;
+    
+    // Find the position of the parent in the grandparent's children
+    if (!grandparent.children) return false;
+    const parentIndex = grandparent.children.indexOf(parent);
+    if (parentIndex === -1) return false;
+    
+    // Remove node from current parent
+    if (parent.children) {
+        const nodeIndex = parent.children.indexOf(node);
+        if (nodeIndex !== -1) {
+            parent.children.splice(nodeIndex, 1);
+        }
+    }
+    
+    // Add node as sibling of parent (after parent)
+    grandparent.addChildAfter(node, parent);
+    node.parent = grandparent;
+    
+    return true;
+}
