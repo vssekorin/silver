@@ -244,22 +244,29 @@ function treeNode(rootNode: SilverNode, node: ContentNode): HTMLDivElement {
 
                     nodeContent.textContent = node.content = textBeforeCursor;
 
-                    let newDiv;
+                    // let newDiv;
+                    // if (!node.children || node.children?.length == 0) {
+                    //     const newContentNode = action.addNodeAfter(textAfterCursor, node);
+                    //     newDiv = treeNode(rootNode, newContentNode);
+                    //     if (node.parent === rootNode) {
+                    //         document.getElementById("silver-tree")!!.insertAfter(newDiv, container);
+                    //     } else {
+                    //         (document.getElementById((node.parent as ContentNode).id)!!.lastElementChild as HTMLElement).insertAfter(newDiv, container);
+                    //     }
+                    // } else {
+                    //     const newContentNode = action.addFirstChildNode(textAfterCursor, node);
+                    //     newDiv = treeNode(rootNode, newContentNode);
+                    //     const childrenContainer = document.getElementById(node.id)?.lastElementChild!!;
+                    //     childrenContainer.insertBefore(newDiv, childrenContainer.firstChild);
+                    // }
+                    // (newDiv.querySelector('.node-content') as HTMLDivElement).focus();
+                    let newContentNode;
                     if (!node.children || node.children?.length == 0) {
-                        const newContentNode = action.addNodeAfter(textAfterCursor, node);
-                        newDiv = treeNode(rootNode, newContentNode);
-                        if (node.parent === rootNode) {
-                            document.getElementById("silver-tree")!!.insertAfter(newDiv, container);
-                        } else {
-                            (document.getElementById((node.parent as ContentNode).id)!!.lastElementChild as HTMLElement).insertAfter(newDiv, container);
-                        }
+                        newContentNode = action.addNodeAfter(textAfterCursor, node);
                     } else {
-                        const newContentNode = action.addFirstChildNode(textAfterCursor, node);
-                        newDiv = treeNode(rootNode, newContentNode);
-                        const childrenContainer = document.getElementById(node.id)?.lastElementChild!!;
-                        childrenContainer.insertBefore(newDiv, childrenContainer.firstChild);
+                        newContentNode = action.addFirstChildNode(textAfterCursor, node);
                     }
-                    (newDiv.querySelector('.node-content') as HTMLDivElement).focus();
+                    rerender(newContentNode, rootNode);
                 } else if (e.ctrlKey) {
                     // Complete and uncomplete
                     action.toggleComplete(node);
@@ -280,6 +287,15 @@ function treeNode(rootNode: SilverNode, node: ContentNode): HTMLDivElement {
                     if (action.indentNode(node)) {
                         rerender(node, rootNode);
                     }
+                }
+                break;
+            }
+            case 'Backspace': {
+                // remove node with subtree
+                if (e.ctrlKey && e.shiftKey) {
+                    e.preventDefault();
+                    action.removeNode(node);
+                    rerender(node, rootNode);
                 }
                 break;
             }
@@ -316,7 +332,7 @@ function saveNodeContent(nodeDiv: HTMLDivElement, node: ContentNode): void {
     }
 }
 
-// Удалить и сделать специфичные реализации.
+// Переделать.
 function rerender (node: ContentNode, rootNode: SilverNode) {
     render(page(rootNode));
     (document.getElementById(node.id)!!.querySelector('.node-content') as HTMLDivElement).focus();

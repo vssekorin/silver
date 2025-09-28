@@ -87,3 +87,11 @@ export function toggleComplete(node: ContentNode) {
         node.type = "text";
     }
 }
+
+export function removeNode(node: ContentNode) {
+    const nodeIndex = node.parent.children?.indexOf(node) ?? -1;
+    if (nodeIndex !== -1) {
+        node.parent.children?.splice(nodeIndex, 1);
+    }
+    state.nodes.delete(node.id);
+}
